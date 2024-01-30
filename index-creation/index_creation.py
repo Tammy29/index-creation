@@ -55,10 +55,12 @@ def create_index_embeddings(folder_path, index_name):
                 documents = loader.load()
                 text_splitter = RecursiveCharacterTextSplitter(separators=['\n'], chunk_size=2048, chunk_overlap=256)
                 docs = text_splitter.split_documents(documents)
-                
+                count=0
                 for doc in docs:
                     doc.metadata['source'] = file_url_source
                     doc.metadata['last_modified'] = file_last_modified
+                    doc.metadata['file_chunk_index'] = count
+                    count += 1
                     try:
                         page = doc.metadata['page_number']
                     except:
@@ -67,16 +69,19 @@ def create_index_embeddings(folder_path, index_name):
             
             elif file.endswith(('.xlsx', '.xls', '.csv', '.xlsm')):
                 documents = json.loads(cf.retrieve_multi_excel_text([file]))
-                file_url_source = obtain_document_info(file)[0]
-                file_last_modified = obtain_document_info(file)[1]
-                
+                file_url_source = obtain_document_info(name)[0]
+                file_last_modified = obtain_document_info(name)[1]
+                count = 0
                 for sheet_name, json_docs in documents.items():
                     for json_doc in json_docs:
                         doc = Document(page_content=json.dumps(json_doc), 
                                        metadata= {'filename':name
                                                  ,'page_number': sheet_name
                                                  ,'source': file_url_source
-                                                 ,'last_modified': file_last_modified})
+                                                 ,'last_modified': file_last_modified
+                                                 ,'file_chunk_index': count
+                                                  })
+                        count += 1
                         finalised_documents.append(doc)
             
     processed_files_w_url = []
@@ -90,5 +95,6 @@ def create_index_embeddings(folder_path, index_name):
     return f"Index Embedding <<{index_name}>> created successfully"
 
 #create index embeddings
-create_index_embeddings(policies_path+'gl', "fin_hr_procurement_BGE_gl")
-create_index_embeddings(policies_path+'finance',"fin_hr_procurement_BGE_finance")
+#create_index_embeddings(policies_path+'gl', "fin_hr_procurement_BGE_gl")
+#create_index_embeddings(policies_path+'finance',"fin_hr_procurement_BGE_finance")
+create_index_embeddings(policies_path+'procurement',"fin_hr_procurement_BGE_procurement")
